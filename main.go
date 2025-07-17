@@ -10,11 +10,13 @@ import (
 func main() {
 	pile := Pile{}
 
-	for range 100 {
+	const boardSize = 7
+
+	const spareTiles = 10
+
+	for range boardSize*boardSize + spareTiles {
 		pile = append(pile, tile.CreateRandomTile())
 	}
-
-	const boardSize = 7
 
 	board := Board{
 		tiles: make([][]*tile.Tile, boardSize),
@@ -30,7 +32,7 @@ func main() {
 	fmt.Println(board.String())
 	fmt.Println()
 
-	if err := solveWaveCollapse(&board, &pile); err == nil {
+	if err := solveWaveCollapse(&board, &pile, 0); err == nil {
 		fmt.Println("Final board:")
 		fmt.Println(board.String())
 	} else {
@@ -41,33 +43,51 @@ func main() {
 	}
 }
 
-func solveWaveCollapse(board *Board, pile *Pile) error {
-	for {
-		minPos := findMinPossibilityPosition(board, pile)
+func solveWaveCollapse(board *Board, pile *Pile, recursiveCount int) error {
+	minPos := findMinPossibilityPosition(board, pile)
 
-		if minPos.row == -1 {
-			if isBoardComplete(board) {
-				return nil
-			} else {
-				return fmt.Errorf("no more positions to fill, but board is not complete")
-			}
+	if minPos.row == -1 {
+		if isBoardComplete(board) {
+			return nil
+		} else {
+			return fmt.Errorf("no more positions to fill, but board is not complete")
 		}
-
-		if minPos.possibilities == 0 {
-			return fmt.Errorf("no possibilities left for position (%d, %d)", minPos.row, minPos.col)
-		}
-
-		pattern := board.GetTilePattern(minPos.row, minPos.col)
-
-		matchingTile := pile.FindMatchingTile(pattern)
-		if matchingTile == nil {
-			return fmt.Errorf("no matching tile found for position (%d, %d)", minPos.row, minPos.col)
-		}
-
-		board.tiles[minPos.row][minPos.col] = matchingTile
-
-		pile.RemoveTile(matchingTile)
 	}
+
+	if minPos.possibilities == 0 {
+		return fmt.Errorf("no possibilities left for position (%d, %d)", minPos.row, minPos.col)
+	}
+
+	// get the tile pattern for the position with the least possibilities
+	pattern := board.GetTilePattern(minPos.row, minPos.col)
+
+	matchingTiles := pile.Filter(pattern)
+	if len(matchingTiles) == 0 {
+		return fmt.Errorf("no matching tile found for position (%d, %d)", minPos.row, minPos.col)
+	}
+
+	for i := range matchingTiles {
+		t := matchingTiles[i]
+
+		// place tile
+		board.tiles[minPos.row][minPos.col] = &t
+		pile.RemoveTile(&t)
+
+		// recursively solve the rest of the board
+		err := solveWaveCollapse(board, pile, recursiveCount+1)
+		if err == nil {
+			return nil // solved!
+		}
+
+		fmt.Printf("Backtracking from position (%d, %d) with tile: %s after %d recursions\n", minPos.row, minPos.col, t.String(), recursiveCount)
+
+		// remove tile from board
+		board.tiles[minPos.row][minPos.col] = nil
+		// Add tile back to pile
+		*pile = append(*pile, t)
+	}
+
+	return fmt.Errorf("no solution found for position (%d, %d)", minPos.row, minPos.col)
 }
 
 type MinPossibilityPosition struct {
