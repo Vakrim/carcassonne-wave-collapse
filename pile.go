@@ -32,10 +32,7 @@ func (p *Pile) PopTop() *tile.Tile {
 
 func (p *Pile) FindMatchingTile(query string) *tile.Tile {
 	for _, t := range *p {
-		if doesTileMatchQuery(t.Top(), string(query[0])) &&
-			doesTileMatchQuery(t.Right(), string(query[1])) &&
-			doesTileMatchQuery(t.Bottom(), string(query[2])) &&
-			doesTileMatchQuery(t.Left(), string(query[3])) {
+		if t.MatchesQuery(query) {
 			return &t
 		}
 	}
@@ -45,10 +42,7 @@ func (p *Pile) FindMatchingTile(query string) *tile.Tile {
 func (p *Pile) Filter(query string) Pile {
 	var result Pile
 	for _, t := range *p {
-		if doesTileMatchQuery(t.Top(), string(query[0])) &&
-			doesTileMatchQuery(t.Right(), string(query[1])) &&
-			doesTileMatchQuery(t.Bottom(), string(query[2])) &&
-			doesTileMatchQuery(t.Left(), string(query[3])) {
+		if t.MatchesQuery(query) {
 			result = append(result, t)
 		}
 	}
@@ -58,10 +52,7 @@ func (p *Pile) Filter(query string) Pile {
 func (p *Pile) CountMatchingTiles(query string) int {
 	count := 0
 	for _, t := range *p {
-		if doesTileMatchQuery(t.Top(), string(query[0])) &&
-			doesTileMatchQuery(t.Right(), string(query[1])) &&
-			doesTileMatchQuery(t.Bottom(), string(query[2])) &&
-			doesTileMatchQuery(t.Left(), string(query[3])) {
+		if t.MatchesQuery(query) {
 			count++
 		}
 	}
@@ -76,8 +67,4 @@ func (p *Pile) RemoveTile(tileToRemove *tile.Tile) {
 		}
 	}
 	panic("Tile not found in the pile")
-}
-
-func doesTileMatchQuery(tileBorder string, queryBorder string) bool {
-	return queryBorder == "?" || tileBorder == queryBorder
 }

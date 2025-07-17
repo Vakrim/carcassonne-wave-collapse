@@ -51,6 +51,13 @@ func (t *Tile) String() string {
 	return t.Top() + t.Right() + t.Bottom() + t.Left()
 }
 
+func (t *Tile) MatchesQuery(query string) bool {
+	return doesTileMatchQuery(t.Top(), string(query[0])) &&
+		doesTileMatchQuery(t.Right(), string(query[1])) &&
+		doesTileMatchQuery(t.Bottom(), string(query[2])) &&
+		doesTileMatchQuery(t.Left(), string(query[3]))
+}
+
 func CreateRandomTile() Tile {
 	return Tile{
 		top:    getRandomBorder(),
@@ -89,4 +96,8 @@ func parseBorder(b byte) Border {
 
 func getRandomBorder() Border {
 	return Border(rand.Intn(int(BorderLength)))
+}
+
+func doesTileMatchQuery(tileBorder string, queryBorder string) bool {
+	return queryBorder == "?" || tileBorder == queryBorder
 }
