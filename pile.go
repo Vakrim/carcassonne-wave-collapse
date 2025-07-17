@@ -6,6 +6,10 @@ import (
 
 type Pile []tile.Tile
 
+func (p *Pile) Size() int {
+	return len(*p)
+}
+
 func (p *Pile) hasMoreTiles() bool {
 	return len(*p) > 0
 }
@@ -62,6 +66,16 @@ func (p *Pile) CountMatchingTiles(query string) int {
 		}
 	}
 	return count
+}
+
+func (p *Pile) RemoveTile(tileToRemove *tile.Tile) {
+	for i, t := range *p {
+		if t == *tileToRemove {
+			*p = append((*p)[:i], (*p)[i+1:]...)
+			return
+		}
+	}
+	panic("Tile not found in the pile")
 }
 
 func doesTileMatchQuery(tileBorder string, queryBorder string) bool {
