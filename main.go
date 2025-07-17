@@ -67,11 +67,11 @@ func solveWaveCollapse(board *Board, pile *Pile, recursiveCount int) error {
 	}
 
 	for i := range matchingTiles {
-		t := matchingTiles[i]
+		t := &matchingTiles[i]
 
 		// place tile
-		board.tiles[minPos.row][minPos.col] = &t
-		pile.RemoveTile(&t)
+		board.tiles[minPos.row][minPos.col] = t
+		pile.RemoveTile(t)
 
 		// recursively solve the rest of the board
 		err := solveWaveCollapse(board, pile, recursiveCount+1)
@@ -84,7 +84,7 @@ func solveWaveCollapse(board *Board, pile *Pile, recursiveCount int) error {
 		// remove tile from board
 		board.tiles[minPos.row][minPos.col] = nil
 		// Add tile back to pile
-		*pile = append(*pile, t)
+		*pile = append(*pile, *t)
 	}
 
 	return fmt.Errorf("no solution found for position (%d, %d)", minPos.row, minPos.col)
