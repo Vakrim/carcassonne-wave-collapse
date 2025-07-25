@@ -3,29 +3,35 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"math"
 	"os"
 	"strings"
+	"time"
 
+	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/vakrim/carcassonne-wave-collapse/tile"
+)
+
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"log"
+	"math"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/vakrim/carcassonne-wave-collapse/tile"
 )
 
 func main() {
-	// Check for command line flag to run with visualization
-	if len(os.Args) > 1 && os.Args[1] == "--visual" {
-		runWithVisualization()
-		return
-	}
-
-	// Original console-based implementation
-	runConsoleVersion()
-}
-
-func runConsoleVersion() {
 	pile, err := loadTilesFromFile("tiles.txt")
 	if err != nil {
-		fmt.Printf("Error loading tiles: %v\n", err)
-		return
+		log.Fatalf("Error loading tiles: %v", err)
 	}
 
 	const boardSize = 12
@@ -41,74 +47,54 @@ func runConsoleVersion() {
 	board.tiles[6][6] = pile.PopTop()
 
 	fmt.Printf("Loaded %d tiles from file\n", len(pile))
-	fmt.Println("Initial board:")
-	fmt.Println(board.String())
-	fmt.Println()
+	fmt.Println("Starting visualization...")
 
-	if err := solveWaveCollapse(&board, &pile, 0); err == nil {
-		fmt.Println("Success! All tiles have been placed:")
-		fmt.Println(board.String())
-		fmt.Printf("Tiles remaining in pile: %d\n", len(pile))
-	} else {
-		fmt.Println("Could not place all tiles")
-		fmt.Println("Error:", err)
-		fmt.Printf("Tiles remaining in pile: %d\n", len(pile))
-		fmt.Println("Final board state:")
-		fmt.Println(board.String())
+	// Check if we can run the visualization
+	if os.Getenv("DISPLAY") == "" {
+		fmt.Println("No display detected, visualization requires a display environment")
+		fmt.Println("Please run in an environment with a display server")
+		os.Exit(1)
+	}
+
+	solver := NewVisualizationSolver(&board, &pile)
+
+	// Start solving in background after a brief delay
+	go func() {
+		time.Sleep(time.Second * 2) // Wait 2 seconds before starting
+		solver.StartSolving()
+	}()
+
+	ebiten.SetWindowSize(screenWidth, screenHeight)
+	ebiten.SetWindowTitle("Carcassonne Wave Collapse Visualization")
+
+	if err := ebiten.RunGame(solver); err != nil {
+		log.Fatal(err)
 	}
 }
 
-func solveWaveCollapse(board *Board, pile *Pile, recursiveCount int) error {
-	// Check if all tiles are used
-	if len(*pile) == 0 {
-		return nil // Success - all tiles used
+func loadTilesFromFile(filename string) (Pile, error) {
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var pile Pile
+	scanner := bufio.NewScanner(file)
+
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line != "" && len(line) == 4 {
+			t := tile.CreateTile(line)
+			pile = append(pile, t)
+		}
 	}
 
-	minPositions := findMinPossibilityPosition(board, pile)
-
-	if len(minPositions) == 0 {
-		return fmt.Errorf("no more valid positions to place remaining %d tiles", len(*pile))
+	if err := scanner.Err(); err != nil {
+		return nil, err
 	}
 
-	// Try each position with minimum possibilities
-	for _, minPos := range minPositions {
-		if minPos.possibilities == 0 {
-			continue
-		}
-
-		// get the tile pattern for the position with the least possibilities
-		pattern := board.GetTilePattern(minPos.row, minPos.col)
-
-		matchingTiles := pile.Filter(pattern)
-		if len(matchingTiles) == 0 {
-			continue
-		}
-
-		// Find the tile with the least placement options across the board
-		bestTile := findBestTile(matchingTiles, board, pile)
-		if bestTile == nil {
-			continue
-		}
-
-		// place tile
-		board.tiles[minPos.row][minPos.col] = bestTile
-		pile.RemoveTile(bestTile)
-
-		// recursively solve the rest of the board
-		err := solveWaveCollapse(board, pile, recursiveCount+1)
-		if err == nil {
-			return nil // solved!
-		}
-
-		fmt.Printf("Backtracking from position (%d, %d) with tile: %s after %d recursions\n", minPos.row, minPos.col, bestTile.String(), recursiveCount)
-
-		// remove tile from board
-		board.tiles[minPos.row][minPos.col] = nil
-		// Add tile back to pile
-		*pile = append(*pile, *bestTile)
-	}
-
-	return fmt.Errorf("no solution found for any of the %d minimum possibility positions", len(minPositions))
+	return pile, nil
 }
 
 type MinPossibilityPosition struct {
@@ -205,29 +191,4 @@ func countTilePlacementOptions(targetTile *tile.Tile, board *Board, pile *Pile) 
 	}
 
 	return count
-}
-
-func loadTilesFromFile(filename string) (Pile, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	var pile Pile
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line != "" && len(line) == 4 {
-			t := tile.CreateTile(line)
-			pile = append(pile, t)
-		}
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
-	return pile, nil
 }

@@ -1,5 +1,3 @@
-//go:build visual
-
 package main
 
 import (

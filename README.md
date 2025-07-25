@@ -1,10 +1,10 @@
 # Carcassonne Wave Collapse
 
-A Go implementation of the Wave Function Collapse algorithm applied to Carcassonne-style tile placement.
+A Go implementation of the Wave Function Collapse algorithm applied to Carcassonne-style tile placement with real-time graphical visualization.
 
 ## Overview
 
-This project implements a tile-based puzzle solver inspired by the board game Carcassonne. It uses concepts from the Wave Function Collapse algorithm to generate valid tile placements on a board where tiles must match their neighbors according to specific rules.
+This project implements a tile-based puzzle solver inspired by the board game Carcassonne. It uses concepts from the Wave Function Collapse algorithm to generate valid tile placements on a board where tiles must match their neighbors according to specific rules. The application provides real-time visualization of the solving process using ebitengine.
 
 ## Features
 
@@ -23,7 +23,7 @@ This project implements a tile-based puzzle solver inspired by the board game Ca
 
 - **Possibility Counting**: Calculates how many tiles from the pile can fit in each empty position
 
-- **Visualization**: Real-time visual representation of the wave collapse algorithm using ebitengine
+- **Real-time Visualization**: Graphical display showing the wave collapse algorithm in action with color-coded tile borders and backtracking visualization
 
 ## Installation
 
@@ -34,34 +34,27 @@ git clone https://github.com/vakrim/carcassonne-wave-collapse.git
 cd carcassonne-wave-collapse
 ```
 
-2. Initialize Go module (if not already done):
+2. Build the application:
 
 ```bash
-go mod init github.com/vakrim/carcassonne-wave-collapse
+go build
 ```
 
 ## Usage
 
-### Running the Console Version
+Run the visualization:
+
+```bash
+./carcassonne-wave-collapse
+```
+
+Or run directly:
 
 ```bash
 go run .
 ```
 
-### Running with Visualization
-
-To build and run with visualization support:
-
-```bash
-go build -tags visual
-./carcassonne-wave-collapse --visual
-```
-
-Or build and run in one step:
-
-```bash
-go run -tags visual . --visual
-```
+**Note**: Requires a display environment to run. The application uses ebitengine for graphics and needs a display server (X11 on Linux, etc.).
 
 ### Running Tests
 
@@ -79,12 +72,6 @@ The visualization shows:
 
 ### Controls
 - Close the window to exit the visualization
-
-### Preview
-To see a text-based preview of what the visualization looks like, run:
-```bash
-go run . --mockup
-```
 
 ### Example Tile Patterns
 
