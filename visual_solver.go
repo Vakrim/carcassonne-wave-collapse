@@ -18,13 +18,15 @@ type VisualizationSolver struct {
 
 func NewVisualizationSolver(board *Board, pile *Pile) *VisualizationSolver {
 	game := NewVisualizationGame(board, pile)
-	return &VisualizationSolver{
+	solver := &VisualizationSolver{
 		board:   board,
 		pile:    pile,
 		game:    game,
 		delay:   time.Millisecond * 500, // delay between steps
 		solving: false,
 	}
+	game.SetSolver(solver) // Set the solver reference for keyboard handling
+	return solver
 }
 
 func (vs *VisualizationSolver) StartSolving() {

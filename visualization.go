@@ -6,6 +6,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
+	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/vakrim/carcassonne-wave-collapse/tile"
 )
 
@@ -30,6 +31,7 @@ type VisualizationGame struct {
 	board         *Board
 	pile          *Pile
 	possibilities [][]PossibilitiesCount
+	solver        *VisualizationSolver
 }
 
 func NewVisualizationGame(board *Board, pile *Pile) *VisualizationGame {
@@ -44,7 +46,17 @@ func (g *VisualizationGame) UpdatePossibilities() {
 	g.possibilities = g.board.CountPossibilities(g.pile)
 }
 
+func (g *VisualizationGame) SetSolver(solver *VisualizationSolver) {
+	g.solver = solver
+}
+
 func (g *VisualizationGame) Update() error {
+	// Check if space key is pressed to speed up visualization
+	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		if g.solver != nil {
+			g.solver.delay = 0
+		}
+	}
 	return nil
 }
 
@@ -133,9 +145,19 @@ func (g *VisualizationGame) drawInfo(screen *ebiten.Image) {
 	// Draw pile count and other info
 	infoY := 10
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Tiles remaining: %d", len(*g.pile)), 10, infoY)
+	
+	// Show current delay
+	delayText := "Normal speed"
+	if g.solver != nil && g.solver.delay == 0 {
+		delayText = "Fast mode (0ms delay)"
+	} else if g.solver != nil {
+		delayText = fmt.Sprintf("Delay: %dms", g.solver.delay.Milliseconds())
+	}
+	ebitenutil.DebugPrintAt(screen, delayText, 10, infoY+20)
 
 	// Draw instructions
-	ebitenutil.DebugPrintAt(screen, "Close window to exit", 10, infoY+20)
+	ebitenutil.DebugPrintAt(screen, "Press SPACE to speed up", 10, infoY+40)
+	ebitenutil.DebugPrintAt(screen, "Close window to exit", 10, infoY+60)
 }
 
 func getBorderColor(border string) color.Color {
