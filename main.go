@@ -11,6 +11,17 @@ import (
 )
 
 func main() {
+	// Check for command line flag to run with visualization
+	if len(os.Args) > 1 && os.Args[1] == "--visual" {
+		runWithVisualization()
+		return
+	}
+
+	// Original console-based implementation
+	runConsoleVersion()
+}
+
+func runConsoleVersion() {
 	pile, err := loadTilesFromFile("tiles.txt")
 	if err != nil {
 		fmt.Printf("Error loading tiles: %v\n", err)

@@ -23,6 +23,8 @@ This project implements a tile-based puzzle solver inspired by the board game Ca
 
 - **Possibility Counting**: Calculates how many tiles from the pile can fit in each empty position
 
+- **Visualization**: Real-time visual representation of the wave collapse algorithm using ebitengine
+
 ## Installation
 
 1. Clone the repository:
@@ -40,10 +42,25 @@ go mod init github.com/vakrim/carcassonne-wave-collapse
 
 ## Usage
 
-### Running the Main Application
+### Running the Console Version
 
 ```bash
-go run main.go
+go run .
+```
+
+### Running with Visualization
+
+To build and run with visualization support:
+
+```bash
+go build -tags visual
+./carcassonne-wave-collapse --visual
+```
+
+Or build and run in one step:
+
+```bash
+go run -tags visual . --visual
 ```
 
 ### Running Tests
@@ -51,6 +68,17 @@ go run main.go
 ```bash
 go test ./...
 ```
+
+## Visualization
+
+The visualization shows:
+- **Real-time tile placement**: Watch as the wave collapse algorithm places tiles one by one
+- **Color-coded borders**: Different colors for each border type (Field=Green, City=Brown, Stream=Blue, Road=Gray)
+- **Backtracking**: Visual feedback when the algorithm needs to backtrack and try different placements
+- **Tile count**: Shows remaining tiles in the pile
+
+### Controls
+- Close the window to exit the visualization
 
 ### Example Tile Patterns
 
@@ -88,3 +116,4 @@ This project is open source and available under the [MIT License](LICENSE).
 
 - Inspired by the Wave Function Collapse algorithm
 - Based on the tile-matching mechanics of Carcassonne board game
+- Visualization powered by [Ebitengine](https://ebitengine.org/)
