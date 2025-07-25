@@ -80,6 +80,12 @@ The visualization shows:
 ### Controls
 - Close the window to exit the visualization
 
+### Preview
+To see a text-based preview of what the visualization looks like, run:
+```bash
+go run . --mockup
+```
+
 ### Example Tile Patterns
 
 Tiles are represented as 4-character strings representing `[Top][Right][Bottom][Left]` borders:
