@@ -30,6 +30,10 @@ func (p *Pile) PopTop() *tile.Tile {
 	return &tile
 }
 
+func (p *Pile) PushTop(t *tile.Tile) {
+	*p = append([]tile.Tile{*t}, *p...)
+}
+
 func (p *Pile) FindMatchingTile(query string) *tile.Tile {
 	for _, t := range *p {
 		if t.MatchesQuery(query) {

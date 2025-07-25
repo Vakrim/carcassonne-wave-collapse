@@ -4,22 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	"math"
-	"os"
-	"strings"
-	"time"
-
-	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/vakrim/carcassonne-wave-collapse/tile"
-)
-
-package main
-
-import (
-	"bufio"
-	"fmt"
-	"log"
-	"math"
 	"os"
 	"strings"
 	"time"
@@ -48,13 +32,6 @@ func main() {
 
 	fmt.Printf("Loaded %d tiles from file\n", len(pile))
 	fmt.Println("Starting visualization...")
-
-	// Check if we can run the visualization
-	if os.Getenv("DISPLAY") == "" {
-		fmt.Println("No display detected, visualization requires a display environment")
-		fmt.Println("Please run in an environment with a display server")
-		os.Exit(1)
-	}
 
 	solver := NewVisualizationSolver(&board, &pile)
 
@@ -97,39 +74,35 @@ func loadTilesFromFile(filename string) (Pile, error) {
 	return pile, nil
 }
 
-type MinPossibilityPosition struct {
+type PositionWithPossibilities struct {
 	row, col      int
 	possibilities int
 }
 
-func findMinPossibilityPosition(board *Board, pile *Pile) []MinPossibilityPosition {
+func getSortedAvailablePositions(board *Board, pile *Pile) []PositionWithPossibilities {
 	possibilities := board.CountPossibilities(pile)
-	minPossibilities := math.MaxInt
-	var positions []MinPossibilityPosition
+	var positions []PositionWithPossibilities
 
-	// Find minimum number of possibilities
+	// Collect all valid positions
 	for i := range possibilities {
 		for j := range possibilities[i] {
 			if !possibilities[i][j].alreadyPlaced &&
 				possibilities[i][j].possibilities > 0 &&
-				hasAdjacentTile(board, i, j) &&
-				possibilities[i][j].possibilities < minPossibilities {
-				minPossibilities = possibilities[i][j].possibilities
+				hasAdjacentTile(board, i, j) {
+				positions = append(positions, PositionWithPossibilities{
+					row:           i,
+					col:           j,
+					possibilities: possibilities[i][j].possibilities,
+				})
 			}
 		}
 	}
 
-	// Collect all positions with minimum possibilities
-	for i := range possibilities {
-		for j := range possibilities[i] {
-			if !possibilities[i][j].alreadyPlaced &&
-				possibilities[i][j].possibilities == minPossibilities &&
-				hasAdjacentTile(board, i, j) {
-				positions = append(positions, MinPossibilityPosition{
-					row:           i,
-					col:           j,
-					possibilities: minPossibilities,
-				})
+	// Sort by possibilities (ascending - least possibilities first)
+	for i := 0; i < len(positions)-1; i++ {
+		for j := i + 1; j < len(positions); j++ {
+			if positions[i].possibilities > positions[j].possibilities {
+				positions[i], positions[j] = positions[j], positions[i]
 			}
 		}
 	}
@@ -149,46 +122,4 @@ func hasAdjacentTile(board *Board, row, col int) bool {
 		}
 	}
 	return false
-}
-
-// finds the tile from matchingTiles that has the fewest alternative placement options
-func findBestTile(matchingTiles Pile, board *Board, pile *Pile) *tile.Tile {
-	if len(matchingTiles) == 0 {
-		return nil
-	}
-
-	bestTile := &matchingTiles[0]
-	minAlternatives := math.MaxInt
-
-	for i := range matchingTiles {
-		currentTile := &matchingTiles[i]
-		alternatives := countTilePlacementOptions(currentTile, board, pile)
-
-		if alternatives < minAlternatives {
-			minAlternatives = alternatives
-			bestTile = currentTile
-		}
-	}
-
-	return bestTile
-}
-
-// counts how many positions on the board this tile could be placed
-func countTilePlacementOptions(targetTile *tile.Tile, board *Board, pile *Pile) int {
-	count := 0
-	possibilities := board.CountPossibilities(pile)
-
-	for i := range possibilities {
-		for j := range possibilities[i] {
-			if !possibilities[i][j].alreadyPlaced && possibilities[i][j].possibilities > 0 &&
-				hasAdjacentTile(board, i, j) {
-				pattern := board.GetTilePattern(i, j)
-				if targetTile.MatchesQuery(pattern) {
-					count++
-				}
-			}
-		}
-	}
-
-	return count
 }

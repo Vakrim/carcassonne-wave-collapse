@@ -36,7 +36,7 @@ func (vs *VisualizationSolver) StartSolving() {
 		defer func() {
 			vs.solving = false
 		}()
-		
+
 		fmt.Println("Starting visualization solve...")
 		err := vs.solveWaveCollapseVisualized(0)
 		if err == nil {
@@ -65,55 +65,40 @@ func (vs *VisualizationSolver) solveWaveCollapseVisualized(recursiveCount int) e
 		return nil // Success - all tiles used
 	}
 
-	minPositions := findMinPossibilityPosition(vs.board, vs.pile)
+	sortedPositions := getSortedAvailablePositions(vs.board, vs.pile)
 
-	if len(minPositions) == 0 {
+	if len(sortedPositions) == 0 {
 		return fmt.Errorf("no more valid positions to place remaining %d tiles", len(*vs.pile))
 	}
 
-	// Try each position with minimum possibilities
-	for _, minPos := range minPositions {
-		if minPos.possibilities == 0 {
-			continue
+	currentTile := vs.pile.PeekTop()
+
+	for _, pos := range sortedPositions {
+		pattern := vs.board.GetTilePattern(pos.row, pos.col)
+
+		// Check if current tile matches this position
+		if currentTile.MatchesQuery(pattern) {
+			// Place the tile
+			placedTile := vs.pile.PopTop()
+			vs.board.tiles[pos.row][pos.col] = placedTile
+
+			// Wait to show the placement
+			time.Sleep(vs.delay)
+
+			err := vs.solveWaveCollapseVisualized(recursiveCount + 1)
+			if err == nil {
+				return nil // solved!
+			}
+
+			fmt.Printf("Backtracking from position (%d, %d) with tile: %s after %d recursions\n", pos.row, pos.col, placedTile.String(), recursiveCount)
+
+			vs.board.tiles[pos.row][pos.col] = nil
+			vs.pile.PushTop(placedTile)
+
+			// Wait to show the backtrack
+			time.Sleep(vs.delay)
 		}
-
-		// get the tile pattern for the position with the least possibilities
-		pattern := vs.board.GetTilePattern(minPos.row, minPos.col)
-
-		matchingTiles := vs.pile.Filter(pattern)
-		if len(matchingTiles) == 0 {
-			continue
-		}
-
-		// Find the tile with the least placement options across the board
-		bestTile := findBestTile(matchingTiles, vs.board, vs.pile)
-		if bestTile == nil {
-			continue
-		}
-
-		// place tile
-		vs.board.tiles[minPos.row][minPos.col] = bestTile
-		vs.pile.RemoveTile(bestTile)
-
-		// Wait to show the placement
-		time.Sleep(vs.delay)
-
-		// recursively solve the rest of the board
-		err := vs.solveWaveCollapseVisualized(recursiveCount + 1)
-		if err == nil {
-			return nil // solved!
-		}
-
-		fmt.Printf("Backtracking from position (%d, %d) with tile: %s after %d recursions\n", minPos.row, minPos.col, bestTile.String(), recursiveCount)
-
-		// remove tile from board
-		vs.board.tiles[minPos.row][minPos.col] = nil
-		// Add tile back to pile
-		*vs.pile = append(*vs.pile, *bestTile)
-
-		// Wait to show the backtrack
-		time.Sleep(vs.delay)
 	}
 
-	return fmt.Errorf("no solution found for any of the %d minimum possibility positions", len(minPositions))
+	return fmt.Errorf("current tile %s cannot be placed in any available position", currentTile.String())
 }
