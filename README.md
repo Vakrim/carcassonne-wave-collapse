@@ -1,10 +1,10 @@
 # Carcassonne Wave Collapse
 
-A Go implementation of the Wave Function Collapse algorithm applied to Carcassonne-style tile placement.
+A Go implementation of the Wave Function Collapse algorithm applied to Carcassonne-style tile placement with real-time graphical visualization.
 
 ## Overview
 
-This project implements a tile-based puzzle solver inspired by the board game Carcassonne. It uses concepts from the Wave Function Collapse algorithm to generate valid tile placements on a board where tiles must match their neighbors according to specific rules.
+This project implements a tile-based puzzle solver inspired by the board game Carcassonne. It uses concepts from the Wave Function Collapse algorithm to generate valid tile placements on a board where tiles must match their neighbors according to specific rules. The application provides real-time visualization of the solving process using ebitengine.
 
 ## Features
 
@@ -23,6 +23,8 @@ This project implements a tile-based puzzle solver inspired by the board game Ca
 
 - **Possibility Counting**: Calculates how many tiles from the pile can fit in each empty position
 
+- **Real-time Visualization**: Graphical display showing the wave collapse algorithm in action with color-coded tile borders and backtracking visualization
+
 ## Installation
 
 1. Clone the repository:
@@ -32,25 +34,44 @@ git clone https://github.com/vakrim/carcassonne-wave-collapse.git
 cd carcassonne-wave-collapse
 ```
 
-2. Initialize Go module (if not already done):
+2. Build the application:
 
 ```bash
-go mod init github.com/vakrim/carcassonne-wave-collapse
+go build
 ```
 
 ## Usage
 
-### Running the Main Application
+Run the visualization:
 
 ```bash
-go run main.go
+./carcassonne-wave-collapse
 ```
+
+Or run directly:
+
+```bash
+go run .
+```
+
+**Note**: Requires a display environment to run. The application uses ebitengine for graphics and needs a display server (X11 on Linux, etc.).
 
 ### Running Tests
 
 ```bash
 go test ./...
 ```
+
+## Visualization
+
+The visualization shows:
+- **Real-time tile placement**: Watch as the wave collapse algorithm places tiles one by one
+- **Color-coded borders**: Different colors for each border type (Field=Green, City=Brown, Stream=Blue, Road=Gray)
+- **Backtracking**: Visual feedback when the algorithm needs to backtrack and try different placements
+- **Tile count**: Shows remaining tiles in the pile
+
+### Controls
+- Close the window to exit the visualization
 
 ### Example Tile Patterns
 
@@ -88,3 +109,4 @@ This project is open source and available under the [MIT License](LICENSE).
 
 - Inspired by the Wave Function Collapse algorithm
 - Based on the tile-matching mechanics of Carcassonne board game
+- Visualization powered by [Ebitengine](https://ebitengine.org/)
