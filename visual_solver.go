@@ -22,7 +22,7 @@ func NewVisualizationSolver(board *Board, pile *Pile) *VisualizationSolver {
 		board:   board,
 		pile:    pile,
 		game:    game,
-		delay:   time.Millisecond * 500, // 500ms delay between steps
+		delay:   time.Millisecond * 500, // delay between steps
 		solving: false,
 	}
 }
@@ -60,6 +60,9 @@ func (vs *VisualizationSolver) Layout(outsideWidth, outsideHeight int) (int, int
 }
 
 func (vs *VisualizationSolver) solveWaveCollapseVisualized(recursiveCount int) error {
+	// Update possibilities display
+	vs.game.UpdatePossibilities()
+
 	// Check if all tiles are used
 	if len(*vs.pile) == 0 {
 		return nil // Success - all tiles used
@@ -82,23 +85,45 @@ func (vs *VisualizationSolver) solveWaveCollapseVisualized(recursiveCount int) e
 			placedTile := vs.pile.PopTop()
 			vs.board.tiles[pos.row][pos.col] = placedTile
 
+			// Update possibilities display after placement
+			vs.game.UpdatePossibilities()
+
 			// Wait to show the placement
-			time.Sleep(vs.delay)
+			vs.sleep()
 
 			err := vs.solveWaveCollapseVisualized(recursiveCount + 1)
 			if err == nil {
 				return nil // solved!
 			}
 
-			fmt.Printf("Backtracking from position (%d, %d) with tile: %s after %d recursions\n", pos.row, pos.col, placedTile.String(), recursiveCount)
-
 			vs.board.tiles[pos.row][pos.col] = nil
 			vs.pile.PushTop(placedTile)
 
+			// Update possibilities display after backtrack
+			vs.game.UpdatePossibilities()
+
 			// Wait to show the backtrack
-			time.Sleep(vs.delay)
+			vs.sleepFaster()
 		}
 	}
 
 	return fmt.Errorf("current tile %s cannot be placed in any available position", currentTile.String())
+}
+
+func (vs *VisualizationSolver) sleep() {
+	if vs.delay <= 0 {
+		return // No delay needed
+	}
+
+	time.Sleep(vs.delay)
+}
+
+func (vs *VisualizationSolver) sleepFaster() {
+	vs.sleep()
+
+	if vs.delay > 10*time.Millisecond {
+		vs.delay -= 10 * time.Millisecond // Decrease delay to speed up visualization
+	} else {
+		vs.delay = 0 // Minimum delay to keep visualization responsive
+	}
 }

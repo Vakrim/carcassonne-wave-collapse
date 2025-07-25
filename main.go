@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
@@ -37,7 +38,7 @@ func main() {
 
 	// Start solving in background after a brief delay
 	go func() {
-		time.Sleep(time.Second * 2) // Wait 2 seconds before starting
+		time.Sleep(time.Second * 1) // Wait before starting
 		solver.StartSolving()
 	}()
 
@@ -99,13 +100,9 @@ func getSortedAvailablePositions(board *Board, pile *Pile) []PositionWithPossibi
 	}
 
 	// Sort by possibilities (ascending - least possibilities first)
-	for i := 0; i < len(positions)-1; i++ {
-		for j := i + 1; j < len(positions); j++ {
-			if positions[i].possibilities > positions[j].possibilities {
-				positions[i], positions[j] = positions[j], positions[i]
-			}
-		}
-	}
+	sort.Slice(positions, func(i, j int) bool {
+		return positions[i].possibilities < positions[j].possibilities
+	})
 
 	return positions
 }

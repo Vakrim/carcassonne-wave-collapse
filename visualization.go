@@ -10,11 +10,11 @@ import (
 )
 
 const (
-	screenWidth   = 800
-	screenHeight  = 600
-	tileSize      = 40
-	boardOffsetX  = 50
-	boardOffsetY  = 50
+	screenWidth  = 800
+	screenHeight = 600
+	tileSize     = 40
+	boardOffsetX = 50
+	boardOffsetY = 50
 )
 
 var (
@@ -27,15 +27,21 @@ var (
 )
 
 type VisualizationGame struct {
-	board *Board
-	pile  *Pile
+	board         *Board
+	pile          *Pile
+	possibilities [][]PossibilitiesCount
 }
 
 func NewVisualizationGame(board *Board, pile *Pile) *VisualizationGame {
 	return &VisualizationGame{
-		board: board,
-		pile:  pile,
+		board:         board,
+		pile:          pile,
+		possibilities: board.CountPossibilities(pile),
 	}
+}
+
+func (g *VisualizationGame) UpdatePossibilities() {
+	g.possibilities = g.board.CountPossibilities(g.pile)
 }
 
 func (g *VisualizationGame) Update() error {
@@ -65,7 +71,7 @@ func (g *VisualizationGame) drawBoard(screen *ebiten.Image) {
 			if g.board.tiles[row][col] != nil {
 				g.drawTile(screen, g.board.tiles[row][col], x, y)
 			} else {
-				g.drawEmptyTile(screen, x, y)
+				g.drawEmptyTile(screen, x, y, row, col)
 			}
 		}
 	}
@@ -101,20 +107,33 @@ func (g *VisualizationGame) drawTile(screen *ebiten.Image, t *tile.Tile, x, y in
 	ebitenutil.DrawRect(screen, float64(x), float64(y+tileSize-1), tileSize, 1, color.Black)
 }
 
-func (g *VisualizationGame) drawEmptyTile(screen *ebiten.Image, x, y int) {
+func (g *VisualizationGame) drawEmptyTile(screen *ebiten.Image, x, y, row, col int) {
 	ebitenutil.DrawRect(screen, float64(x), float64(y), tileSize, tileSize, emptyColor)
+
 	// Draw border
 	ebitenutil.DrawRect(screen, float64(x), float64(y), tileSize, 1, color.RGBA{200, 200, 200, 255})
 	ebitenutil.DrawRect(screen, float64(x), float64(y), 1, tileSize, color.RGBA{200, 200, 200, 255})
 	ebitenutil.DrawRect(screen, float64(x+tileSize-1), float64(y), 1, tileSize, color.RGBA{200, 200, 200, 255})
 	ebitenutil.DrawRect(screen, float64(x), float64(y+tileSize-1), tileSize, 1, color.RGBA{200, 200, 200, 255})
+
+	// Draw possibilities count if available
+	if g.possibilities != nil && row < len(g.possibilities) && col < len(g.possibilities[row]) {
+		possCount := g.possibilities[row][col]
+		if !possCount.alreadyPlaced && possCount.possibilities > 0 {
+			// Show possibilities count in the center of the tile
+			text := fmt.Sprintf("%d", possCount.possibilities)
+			textX := x + tileSize/2 - 4 // Center text (rough approximation)
+			textY := y + tileSize/2 - 4
+			ebitenutil.DebugPrintAt(screen, text, textX, textY)
+		}
+	}
 }
 
 func (g *VisualizationGame) drawInfo(screen *ebiten.Image) {
 	// Draw pile count and other info
 	infoY := 10
 	ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Tiles remaining: %d", len(*g.pile)), 10, infoY)
-	
+
 	// Draw instructions
 	ebitenutil.DebugPrintAt(screen, "Close window to exit", 10, infoY+20)
 }
